@@ -2,9 +2,10 @@ package com.shujaa.ops.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inventory
@@ -15,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -42,12 +44,10 @@ fun AppShell() {
     val currentRole by viewModel.userRole.collectAsState()
 
     if (currentRole == null) {
-        LoginScreen(
-            onLogin = { role ->
-                viewModel.login(role)
-                navController.navigate(AppScreen.Dashboard.route)
-            }
-        )
+        LoginScreen(onLogin = { role ->
+            viewModel.login(role)
+            navController.navigate(AppScreen.Dashboard.route)
+        })
         return
     }
 

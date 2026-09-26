@@ -1,7 +1,6 @@
 package com.shujaa.ops.ui
 
 import android.content.Context
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shujaa.ops.data.AppRepository
@@ -15,16 +14,6 @@ import java.time.format.DateTimeFormatter
 
 enum class UserRole { ADMIN, SUPERVISOR }
 
-data class MachineUiModel(
-    val id: String,
-    val name: String,
-    val machineId: String,
-    val category: String,
-    val location: String,
-    val status: String,
-    val isActive: Boolean
-)
-
 class ShujaaViewModel(context: Context) : ViewModel() {
     private val repository = AppRepository(context)
 
@@ -37,6 +26,7 @@ class ShujaaViewModel(context: Context) : ViewModel() {
     val maintenance = repository.maintenanceFlow
     val spareParts = repository.sparePartsFlow
     val tasks = repository.tasksFlow
+    val stockMovements = repository.stockMovementsFlow
 
     fun login(role: UserRole) {
         _userRole.value = role
@@ -94,17 +84,10 @@ class ShujaaViewModel(context: Context) : ViewModel() {
             )
             repository.addMachine(machine2)
 
-            val product1 = ProductEntity(
-                name = "Chainlink Mesh",
-                code = "CL-100",
-                category = "Chainlink",
-                unit = "kg",
-                syncState = "SYNCED"
-            )
             repository.addProduction(
                 ProductionRecordEntity(
                     machineId = machine1.id,
-                    productName = product1.name,
+                    productName = "Chainlink Mesh",
                     shiftName = "Morning",
                     date = today,
                     target = 950.0,

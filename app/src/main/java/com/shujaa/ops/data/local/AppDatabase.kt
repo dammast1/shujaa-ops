@@ -4,11 +4,13 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.shujaa.ops.data.local.dao.BreakdownDao
 import com.shujaa.ops.data.local.dao.MachineDao
 import com.shujaa.ops.data.local.dao.MaintenanceDao
 import com.shujaa.ops.data.local.dao.ProductionDao
 import com.shujaa.ops.data.local.dao.SparePartDao
+import com.shujaa.ops.data.local.dao.StockMovementDao
 import com.shujaa.ops.data.local.dao.TaskDao
 import com.shujaa.ops.data.local.entities.*
 
@@ -33,6 +35,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun maintenanceDao(): MaintenanceDao
     abstract fun sparePartDao(): SparePartDao
     abstract fun taskDao(): TaskDao
+    abstract fun stockMovementDao(): StockMovementDao
 
     companion object {
         @Volatile
@@ -46,7 +49,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "shujaa_ops.db"
                 )
                     .fallbackToDestructiveMigration()
-                    .addCallback(object : Callback() {
+                    .addCallback(object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
                         }

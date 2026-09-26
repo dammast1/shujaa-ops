@@ -12,6 +12,9 @@ interface MachineDao {
     @Query("SELECT * FROM machines ORDER BY name ASC")
     fun observeMachines(): Flow<List<MachineEntity>>
 
+    @Query("SELECT * FROM machines")
+    suspend fun getAllMachines(): List<MachineEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMachine(machine: MachineEntity)
 
@@ -62,4 +65,13 @@ interface TaskDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTask(task: TaskEntity)
+}
+
+@Dao
+interface StockMovementDao {
+    @Query("SELECT * FROM stock_movements ORDER BY date DESC")
+    fun observeMovements(): Flow<List<StockMovementEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMovement(movement: StockMovementEntity)
 }
