@@ -5,6 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shujaa.ops.data.AppRepository
 import com.shujaa.ops.data.local.entities.*
+import com.shujaa.ops.validation.ProductionValidator
+import com.shujaa.ops.validation.BreakdownValidator
+import com.shujaa.ops.validation.ValidationError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,9 +19,14 @@ enum class UserRole { ADMIN, SUPERVISOR }
 
 class ShujaaViewModel(context: Context) : ViewModel() {
     private val repository = AppRepository(context)
+    private val productionValidator = ProductionValidator()
+    private val breakdownValidator = BreakdownValidator()
 
     private val _userRole = MutableStateFlow<UserRole?>(null)
     val userRole: StateFlow<UserRole?> = _userRole.asStateFlow()
+
+    private val _validationErrors = MutableStateFlow<List<ValidationError>>(emptyList())
+    val validationErrors: StateFlow<List<ValidationError>> = _validationErrors.asStateFlow()
 
     val machines = repository.machinesFlow
     val production = repository.productionFlow
@@ -32,16 +40,68 @@ class ShujaaViewModel(context: Context) : ViewModel() {
         _userRole.value = role
     }
 
+    fun submitProduction(
+        machineId: String,
+        productName: String,
+        shiftName: String,
+        target: Double,
+        actual: Double,
+        good: Double,
+        rejected: Double,
+        waste: Double,
+        downtimeMinutes: Int
+    ) {
+        val record = ProductionRecordEntity(
+            machineId = machineId,
+            productName = productName,
+            shiftName = shiftName,
+            date = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
+            target = target,
+            actual = actual,
+            good = good,
+            rejected = rejected,
+            waste = waste,
+            downtimeMinutes = downtimeMinutes,
+            syncState = "PENDING_SYNC"
+        )
+
+        val errors = productionValidator.validate(record)
+        if (errors.isNotEmpty()) {
+            _validationErrors.value = errors
+            return
+        }
+
+        _validationErrors.value = emptyList()
+        viewModelScope.launch {
+            repository.addProduction(record)
+        }
+    }
+
+    fun submitBreakdown(machineId: String, machineName: String, problem: String, description: String) {
+        val errors = breakdownValidator.validate(machineId, problem, description)
+        if (errors.isNotEmpty()) {
+            _validationErrors.value = errors
+            return
+        }
+
+        _validationErrors.value = emptyList()
+        viewModelScope.launch {
+            val breakdown = BreakdownEntity(
+                machineId = machineId,
+                machineName = machineName,
+                problem = problem,
+                priority = "HIGH",
+                description = description,
+                status = "OPEN",
+                reportedAt = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
+                syncState = "PENDING_SYNC"
+            )
+            repository.addBreakdown(breakdown)
+        }
+    }
+
     fun addMachine(machine: MachineEntity) = viewModelScope.launch {
         repository.addMachine(machine)
-    }
-
-    fun addProduction(record: ProductionRecordEntity) = viewModelScope.launch {
-        repository.addProduction(record)
-    }
-
-    fun addBreakdown(breakdown: BreakdownEntity) = viewModelScope.launch {
-        repository.addBreakdown(breakdown)
     }
 
     fun addMaintenance(job: MaintenanceJobEntity) = viewModelScope.launch {
@@ -58,53 +118,6 @@ class ShujaaViewModel(context: Context) : ViewModel() {
 
     fun addStockMovement(movement: StockMovementEntity) = viewModelScope.launch {
         repository.addStockMovement(movement)
-    }
-
-    fun submitProduction(
-        machineId: String,
-        productName: String,
-        shiftName: String,
-        target: Double,
-        actual: Double,
-        good: Double,
-        rejected: Double,
-        waste: Double,
-        downtimeMinutes: Int
-    ) {
-        viewModelScope.launch {
-            repository.addProduction(
-                ProductionRecordEntity(
-                    machineId = machineId,
-                    productName = productName,
-                    shiftName = shiftName,
-                    date = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
-                    target = target,
-                    actual = actual,
-                    good = good,
-                    rejected = rejected,
-                    waste = waste,
-                    downtimeMinutes = downtimeMinutes,
-                    syncState = "PENDING_SYNC"
-                )
-            )
-        }
-    }
-
-    fun submitBreakdown(machineId: String, machineName: String, problem: String, description: String) {
-        viewModelScope.launch {
-            repository.addBreakdown(
-                BreakdownEntity(
-                    machineId = machineId,
-                    machineName = machineName,
-                    problem = problem,
-                    priority = "HIGH",
-                    description = description,
-                    status = "OPEN",
-                    reportedAt = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
-                    syncState = "PENDING_SYNC"
-                )
-            )
-        }
     }
 
     fun createDemoData() {
@@ -186,19 +199,6 @@ class ShujaaViewModel(context: Context) : ViewModel() {
                     priority = "MEDIUM",
                     dueDate = today,
                     notes = "Verify chain drive and lubrication points.",
-                    syncState = "SYNCED"
-                )
-            )
-
-            repository.addTask(
-                TaskEntity(
-                    title = "Inspect bearing 6205",
-                    description = "Check vibration and temperature.",
-                    machineName = "Barbed Wire 02",
-                    assignedTo = "A. Hassan",
-                    priority = "HIGH",
-                    status = "PENDING",
-                    dueDate = today,
                     syncState = "SYNCED"
                 )
             )

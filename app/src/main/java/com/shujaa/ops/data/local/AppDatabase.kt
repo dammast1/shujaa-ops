@@ -5,13 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.shujaa.ops.data.local.dao.BreakdownDao
-import com.shujaa.ops.data.local.dao.MachineDao
-import com.shujaa.ops.data.local.dao.MaintenanceDao
-import com.shujaa.ops.data.local.dao.ProductionDao
-import com.shujaa.ops.data.local.dao.SparePartDao
-import com.shujaa.ops.data.local.dao.StockMovementDao
-import com.shujaa.ops.data.local.dao.TaskDao
+import com.shujaa.ops.data.local.dao.*
 import com.shujaa.ops.data.local.entities.*
 
 @Database(
@@ -23,9 +17,12 @@ import com.shujaa.ops.data.local.entities.*
         BreakdownEntity::class,
         MaintenanceJobEntity::class,
         TaskEntity::class,
-        StockMovementEntity::class
+        StockMovementEntity::class,
+        DocumentEntity::class,
+        ShiftEntity::class,
+        CategoryEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -36,6 +33,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun sparePartDao(): SparePartDao
     abstract fun taskDao(): TaskDao
     abstract fun stockMovementDao(): StockMovementDao
+    abstract fun documentDao(): DocumentDao
 
     companion object {
         @Volatile
@@ -48,14 +46,39 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "shujaa_ops.db"
                 )
-                    .fallbackToDestructiveMigration()
-                    .addCallback(object : RoomDatabase.Callback() {
-                        override fun onCreate(db: SupportSQLiteDatabase) {
-                            super.onCreate(db)
-                        }
-                    })
+                    .addMigrations(MIGRATION_1_2)
                     .build()
                     .also { INSTANCE = it }
             }
     }
+}
+
+private val MIGRATION_1_2 = androidx.room.migration.Migration(1, 2) { database ->
+    database.execSQL("""
+        CREATE TABLE IF NOT EXISTS documents (
+            id TEXT PRIMARY KEY NOT NULL,
+            title TEXT NOT NULL,
+            type TEXT NOT NULL,
+            filePath TEXT NOT NULL,
+            machineId TEXT,
+            category TEXT NOT NULL DEFAULT 'SOP',
+            isCached INTEGER NOT NULL DEFAULT 0
+        )
+    """)
+    database.execSQL("""
+        CREATE TABLE IF NOT EXISTS shifts (
+            id TEXT PRIMARY KEY NOT NULL,
+            name TEXT NOT NULL,
+            startTime TEXT NOT NULL,
+            endTime TEXT NOT NULL,
+            crossesMidnight INTEGER NOT NULL DEFAULT 0
+        )
+    """)
+    database.execSQL("""
+        CREATE TABLE IF NOT EXISTS categories (
+            id TEXT PRIMARY KEY NOT NULL,
+            name TEXT NOT NULL,
+            type TEXT NOT NULL
+        )
+    """)
 }
