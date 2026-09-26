@@ -15,14 +15,13 @@ class AppRepository(context: Context) {
     val sparePartsFlow: Flow<List<SparePartEntity>> = db.sparePartDao().observeSpareParts()
     val tasksFlow: Flow<List<TaskEntity>> = db.taskDao().observeTasks()
     val stockMovementsFlow: Flow<List<StockMovementEntity>> = db.stockMovementDao().observeMovements()
+    val documentsFlow: Flow<List<DocumentEntity>> = db.documentDao().observeDocuments()
 
-    suspend fun addMachine(machine: MachineEntity) {
-        db.machineDao().insertMachine(machine)
-    }
+    suspend fun addMachine(machine: MachineEntity): Boolean =
+        db.machineDao().insertMachine(machine) != -1L
 
-    suspend fun addProduction(record: ProductionRecordEntity) {
-        db.productionDao().insertProduction(record)
-    }
+    suspend fun addProduction(record: ProductionRecordEntity): Boolean =
+        db.productionDao().insertProduction(record) != -1L
 
     suspend fun addBreakdown(breakdown: BreakdownEntity) {
         db.breakdownDao().insertBreakdown(breakdown)
@@ -32,9 +31,8 @@ class AppRepository(context: Context) {
         db.maintenanceDao().insertMaintenance(job)
     }
 
-    suspend fun addSparePart(part: SparePartEntity) {
-        db.sparePartDao().insertSparePart(part)
-    }
+    suspend fun addSparePart(part: SparePartEntity): Boolean =
+        db.sparePartDao().insertSparePart(part) != -1L
 
     suspend fun addTask(task: TaskEntity) {
         db.taskDao().insertTask(task)
@@ -43,4 +41,11 @@ class AppRepository(context: Context) {
     suspend fun addStockMovement(movement: StockMovementEntity) {
         db.stockMovementDao().insertMovement(movement)
     }
+
+    suspend fun addDocument(document: DocumentEntity) {
+        db.documentDao().insertDocument(document)
+    }
+
+    suspend fun consumeSparePart(partId: String, quantity: Int): Boolean =
+        db.sparePartDao().consumePart(partId, quantity)
 }
