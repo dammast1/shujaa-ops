@@ -60,42 +60,75 @@ class ShujaaViewModel(context: Context) : ViewModel() {
         repository.addStockMovement(movement)
     }
 
+    fun submitProduction(
+        machineId: String,
+        productName: String,
+        shiftName: String,
+        target: Double,
+        actual: Double,
+        good: Double,
+        rejected: Double,
+        waste: Double,
+        downtimeMinutes: Int
+    ) {
+        viewModelScope.launch {
+            repository.addProduction(
+                ProductionRecordEntity(
+                    machineId = machineId,
+                    productName = productName,
+                    shiftName = shiftName,
+                    date = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
+                    target = target,
+                    actual = actual,
+                    good = good,
+                    rejected = rejected,
+                    waste = waste,
+                    downtimeMinutes = downtimeMinutes,
+                    syncState = "PENDING_SYNC"
+                )
+            )
+        }
+    }
+
+    fun submitBreakdown(machineId: String, machineName: String, problem: String, description: String) {
+        viewModelScope.launch {
+            repository.addBreakdown(
+                BreakdownEntity(
+                    machineId = machineId,
+                    machineName = machineName,
+                    problem = problem,
+                    priority = "HIGH",
+                    description = description,
+                    status = "OPEN",
+                    reportedAt = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
+                    syncState = "PENDING_SYNC"
+                )
+            )
+        }
+    }
+
     fun createDemoData() {
         viewModelScope.launch {
             val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
 
-            val machine1 = MachineEntity(
-                name = "Chainlink 01",
-                machineId = "CH-01",
-                category = "Chainlink",
-                location = "Line A",
-                status = "RUNNING",
-                syncState = "SYNCED"
+            repository.addMachine(
+                MachineEntity(
+                    name = "Chainlink 01",
+                    machineId = "CH-01",
+                    category = "Chainlink",
+                    location = "Line A",
+                    status = "RUNNING",
+                    syncState = "SYNCED"
+                )
             )
-            repository.addMachine(machine1)
 
-            val machine2 = MachineEntity(
-                name = "Barbed Wire 02",
-                machineId = "BW-02",
-                category = "Barbed Wire",
-                location = "Line B",
-                status = "STOPPED",
-                syncState = "SYNCED"
-            )
-            repository.addMachine(machine2)
-
-            repository.addProduction(
-                ProductionRecordEntity(
-                    machineId = machine1.id,
-                    productName = "Chainlink Mesh",
-                    shiftName = "Morning",
-                    date = today,
-                    target = 950.0,
-                    actual = 920.0,
-                    good = 890.0,
-                    rejected = 15.0,
-                    waste = 15.0,
-                    downtimeMinutes = 32,
+            repository.addMachine(
+                MachineEntity(
+                    name = "Barbed Wire 02",
+                    machineId = "BW-02",
+                    category = "Barbed Wire",
+                    location = "Line B",
+                    status = "STOPPED",
                     syncState = "SYNCED"
                 )
             )
@@ -114,10 +147,26 @@ class ShujaaViewModel(context: Context) : ViewModel() {
                 )
             )
 
+            repository.addProduction(
+                ProductionRecordEntity(
+                    machineId = "CH-01",
+                    productName = "Chainlink Mesh",
+                    shiftName = "Morning",
+                    date = today,
+                    target = 950.0,
+                    actual = 920.0,
+                    good = 890.0,
+                    rejected = 15.0,
+                    waste = 15.0,
+                    downtimeMinutes = 32,
+                    syncState = "SYNCED"
+                )
+            )
+
             repository.addBreakdown(
                 BreakdownEntity(
-                    machineId = machine2.id,
-                    machineName = machine2.name,
+                    machineId = "BW-02",
+                    machineName = "Barbed Wire 02",
                     problem = "Drive motor overheated",
                     priority = "HIGH",
                     description = "Operator reported abnormal heat.",
@@ -129,8 +178,8 @@ class ShujaaViewModel(context: Context) : ViewModel() {
 
             repository.addMaintenance(
                 MaintenanceJobEntity(
-                    machineId = machine1.id,
-                    machineName = machine1.name,
+                    machineId = "CH-01",
+                    machineName = "Chainlink 01",
                     title = "Scheduled lubrication check",
                     type = "PM",
                     status = "PENDING",
@@ -145,7 +194,7 @@ class ShujaaViewModel(context: Context) : ViewModel() {
                 TaskEntity(
                     title = "Inspect bearing 6205",
                     description = "Check vibration and temperature.",
-                    machineName = machine2.name,
+                    machineName = "Barbed Wire 02",
                     assignedTo = "A. Hassan",
                     priority = "HIGH",
                     status = "PENDING",

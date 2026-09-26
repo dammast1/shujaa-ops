@@ -3,7 +3,6 @@ package com.shujaa.ops.ui
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
@@ -16,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -67,10 +65,10 @@ fun AppShell() {
                     label = { Text("Machines") }
                 )
                 NavigationBarItem(
-                    selected = navController.currentDestination?.route == AppScreen.Stock.route,
-                    onClick = { navController.navigate(AppScreen.Stock.route) },
-                    icon = { Icon(Icons.Default.Inventory, contentDescription = "Stock") },
-                    label = { Text("Stock") }
+                    selected = navController.currentDestination?.route == AppScreen.Production.route,
+                    onClick = { navController.navigate(AppScreen.Production.route) },
+                    icon = { Icon(Icons.Default.Inventory, contentDescription = "Production") },
+                    label = { Text("Prod") }
                 )
                 NavigationBarItem(
                     selected = navController.currentDestination?.route == AppScreen.Maintenance.route,
