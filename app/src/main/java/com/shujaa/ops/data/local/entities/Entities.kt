@@ -1,10 +1,14 @@
 package com.shujaa.ops.data.local.entities
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
 
-@Entity(tableName = "machines")
+@Entity(
+    tableName = "machines",
+    indices = [Index(value = ["machineId"], unique = true)]
+)
 data class MachineEntity(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val name: String,
@@ -16,7 +20,10 @@ data class MachineEntity(
     val syncState: String = "SYNCED"
 )
 
-@Entity(tableName = "products")
+@Entity(
+    tableName = "products",
+    indices = [Index(value = ["code"], unique = true)]
+)
 data class ProductEntity(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val name: String,
@@ -27,7 +34,10 @@ data class ProductEntity(
     val syncState: String = "SYNCED"
 )
 
-@Entity(tableName = "spare_parts")
+@Entity(
+    tableName = "spare_parts",
+    indices = [Index(value = ["partNumber"], unique = true)]
+)
 data class SparePartEntity(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val name: String,
@@ -41,7 +51,10 @@ data class SparePartEntity(
     val syncState: String = "SYNCED"
 )
 
-@Entity(tableName = "production_records")
+@Entity(
+    tableName = "production_records",
+    indices = [Index(value = ["machineId", "date", "shiftName"], unique = false)]
+)
 data class ProductionRecordEntity(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val machineId: String,

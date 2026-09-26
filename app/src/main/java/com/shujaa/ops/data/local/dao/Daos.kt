@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import com.shujaa.ops.data.local.entities.*
 import kotlinx.coroutines.flow.Flow
 
@@ -34,8 +35,8 @@ interface ProductionDao {
     @Query("SELECT * FROM production_records WHERE date = :date")
     suspend fun getProductionForDate(date: String): List<ProductionRecordEntity>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertProduction(record: ProductionRecordEntity)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertProduction(record: ProductionRecordEntity): Long
 }
 
 @Dao
@@ -78,17 +79,17 @@ interface SparePartDao {
 
     @Transaction
     suspend fun consumePart(partId: String, quantity: Int): Boolean {
+        if (quantity <= 0) return false
         val part = getPartById(partId) ?: return false
         if (part.quantity < quantity) return false
-        val updated = part.copy(quantity = part.quantity - quantity)
-        updatePart(updated)
+        updatePart(part.copy(quantity = part.quantity - quantity))
         return true
     }
 
     @Query("SELECT * FROM spare_parts WHERE id = :id LIMIT 1")
     suspend fun getPartById(id: String): SparePartEntity?
 
-    @androidx.room.Update
+    @Update
     suspend fun updatePart(part: SparePartEntity)
 }
 
@@ -108,13 +109,4 @@ interface StockMovementDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMovement(movement: StockMovementEntity)
-}
-
-@Dao
-interface DocumentDao {
-    @Query("SELECT * FROM documents ORDER BY title ASC")
-    fun observeDocuments(): Flow<List<DocumentEntity>>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertDocument(document: DocumentEntity)
 }
